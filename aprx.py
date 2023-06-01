@@ -5,7 +5,6 @@ from sklearn.decomposition import PCA
 from sklearn.datasets import fetch_lfw_people
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_olivetti_faces
-import matplotlib.cm as cm
 
 # Load faces dataset
 faces = fetch_olivetti_faces()
@@ -42,24 +41,26 @@ eigenvectors = eigenvectors.T
 plt.ion()
 fig1, (ax_2) = plt.subplots(1, 1, figsize=(10, 4), subplot_kw={'xticks': [], 'yticks': []})
 futpic = 0
-img_artist = None
 for i in range(10,60,10):
     # Approximate faces with principal components
     sample_index = i  # Index of sample to approximate
     sample_face = new_X[sample_index].reshape(faces.images.shape[1], faces.images.shape[2])
     Y_i = Y[sample_index]
     Y_0 = Y[sample_index - 10]
-    k = 0.1
+    k = 0.2
     h =[0]*n_components
-    for p in range(0,35,1):
+    for p in range(0,50,1):
         for u in range(len(Y_i)):
-            if Y_0[u].real < 0:
+            h[u] += Y_0[u].real
+        for u in range(len(Y_i)):
+            if h[u] < 0:
                 g = abs(Y_0[u])
                 Y_0[u] += (abs(Y_0[u]) + Y_0[u] + Y_i[u])*k
             else:
                 Y_0[u] += (Y_0[u] - Y_0[u] + Y_i[u])*k
 
         aprx_img = np.zeros((faces.images.shape[1], faces.images.shape[2]))
+        g = len(eigenvectors)
         for i in range(len(Y_0)):
             aprx_img =aprx_img + Y_0[i]*(eigenvectors[i].reshape(faces.images.shape[1], faces.images.shape[2]))
         aprx_img += mean_img
@@ -68,11 +69,7 @@ for i in range(10,60,10):
         # Calculate percentage of convergence
         mse = np.mean((sample_face - aprx_img) ** 2)
         # Reconstruct image using principal components
-        if img_artist == None:
-            img_artist =ax_2.imshow(aprx_img, cmap='gray')
-        else:
-            img_artist.set_data(aprx_img)
-            img_artist.set_cmap(cm.gray)
+        ax_2.imshow(aprx_img, cmap='gray')
         fig1.canvas.draw()
         fig1.canvas.flush_events()
     ax_2.set_title('Нажми на лицо')
